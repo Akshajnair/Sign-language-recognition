@@ -4,12 +4,7 @@ import "@tensorflow/tfjs-backend-webgl";
 import * as handpose from "@tensorflow-models/handpose";
 import Webcam from "react-webcam";
 import { drawHand } from "./Utilities";
-import {
-  Finger,
-  FingerCurl,
-  GestureDescription,
-  GestureEstimator,
-} from "fingerpose";
+import Gestures from "./FingerPose";
 
 const Camera = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -45,8 +40,20 @@ const Camera = () => {
           // Draw mesh
           const ctx = canvasRef.current.getContext("2d");
           ctx.clearRect(0, 0, videoWidth, videoHeight);
-          drawHand(hand, ctx);
-        }, 16);
+          let gesture;
+          if (hand.length && hand[0].handInViewConfidence > 0.9) {
+            const gestures = Gestures.estimate(hand[0].landmarks, 7.5);
+            if (gesture !== gestures) {
+              gesture = gestures;
+              console.log(gestures, gestures.gestures[0]?.name);
+            }
+            ctx.font = "30px Arial";
+            ctx.fillText(gestures.gestures[0]?.name || "", 10, 50);
+            drawHand(hand, ctx);
+          }
+          //   const estimatedGestures = GE.estimate(predictions.landmarks, 8.5);
+          //   const gestures = GE.estimate(hand.landmarks, 7.5);
+        }, 50);
       }
     }
     runHandpose().catch(() => {});
