@@ -89,7 +89,6 @@ export default function App() {
           if (hand.length > 0) {
             //loading the fingerpose model
             const GE = new fp.GestureEstimator([
-              fp.Gestures.ThumbsUpGesture,
               Handsigns.aSign,
               Handsigns.bSign,
               Handsigns.cSign,
@@ -120,56 +119,65 @@ export default function App() {
 
             const estimatedGestures = await GE.estimate(hand[0].landmarks, 6.5);
             // document.querySelector('.pose-data').innerHTML =JSON.stringify(estimatedGestures.poseData, null, 2);
-
-            if (gamestate === "started") {
-              document.querySelector("#app-title").innerText =
-                "Make a 👍 gesture with your hand to start";
-            }
-
-            if (
-              estimatedGestures.gestures !== undefined &&
-              estimatedGestures.gestures.length > 0
-            ) {
+            console.log(estimatedGestures);
+            if (estimatedGestures.gestures.length) {
               const confidence = estimatedGestures.gestures.map((p) => p.score);
               const maxConfidence = confidence.indexOf(
                 Math.max.apply(undefined, confidence)
               );
-              //setting up game state, looking for thumb emoji
-              if (
-                estimatedGestures.gestures[maxConfidence].name ===
-                  "thumbs_up" &&
-                gamestate !== "played"
-              ) {
-                _signList();
-                gamestate = "played";
-                document.getElementById("emojimage").classList.add("play");
-                // document.querySelector(".tutor-text").innerText =
-                //   "make a hand gesture based on letter shown below";
-              } else if (gamestate === "played") {
-                document.querySelector("#app-title").innerText = "";
-
-                //looping the sign list
-                if (currentSign === signList.length) {
-                  _signList();
-                  currentSign = 0;
-                  return;
-                }
-
-                //game play state
-                // document
-                //   .getElementById("emojimage")
-                //   .setAttribute("src", signList[currentSign].src);
-                if (
-                  signList[currentSign].alt ===
-                  estimatedGestures.gestures[maxConfidence].name
-                ) {
-                  currentSign++;
-                }
-                setSign(estimatedGestures.gestures[maxConfidence].name);
-              } else if (gamestate === "finished") {
-                return;
-              }
+              setSign(estimatedGestures.gestures[maxConfidence].name);
             }
+
+            // if (gamestate === "started") {
+            //   document.querySelector("#app-title").innerText =
+            //     "Make a 👍 gesture with your hand to start";
+            // }
+
+            // if (
+            //   estimatedGestures.gestures !== undefined &&
+            //   estimatedGestures.gestures.length > 0
+            // ) {
+            //   const confidence = estimatedGestures.gestures.map((p) => p.score);
+            //   const maxConfidence = confidence.indexOf(
+            //     Math.max.apply(undefined, confidence)
+            //   );
+            //   //setting up game state, looking for thumb emoji
+            //   if (
+            //     estimatedGestures.gestures[maxConfidence].name ===
+            //       "thumbs_up" &&
+            //     gamestate !== "played"
+            //   ) {
+            //     _signList();
+            //     gamestate = "played";
+            //     document.getElementById("emojimage").classList.add("play");
+            //     // document.querySelector(".tutor-text").innerText =
+            //     //   "make a hand gesture based on letter shown below";
+            //   } else if (gamestate === "played") {
+            //     document.querySelector("#app-title").innerText = "";
+
+            //     //looping the sign list
+            //     if (currentSign === signList.length) {
+            //       _signList();
+            //       currentSign = 0;
+            //       return;
+            //     }
+
+            //     //game play state
+            //     // document
+            //     //   .getElementById("emojimage")
+            //     //   .setAttribute("src", signList[currentSign].src);
+            //     if (
+            //       signList[currentSign].alt ===
+            //       estimatedGestures.gestures[maxConfidence].name
+            //     ) {
+            //       currentSign++;
+            //     }
+            //     setSign(estimatedGestures.gestures[maxConfidence].name);
+            //   }
+            // else if (gamestate === "finished") {
+            //   return;
+            // }
+            // }
           }
         }, 50);
       }
