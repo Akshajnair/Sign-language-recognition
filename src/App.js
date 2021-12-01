@@ -10,7 +10,7 @@ import About from "./components/about";
 import Metatags from "./components/metatags";
 import "./styles/App.css";
 import "@tensorflow/tfjs-backend-webgl";
-import { RiCameraFill, RiCameraOffFill } from "react-icons/ri";
+import axios from "axios";
 import {
   Text,
   Heading,
@@ -26,40 +26,16 @@ import {
 export default function App() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
-
-  const [camState, setCamState] = useState("on");
-
-  const [sign, setSign] = useState(null);
-
-  let signList = [];
-  let currentSign = 0;
-
-  let gamestate = "started";
-
-  // let net;
-
-  function _signList() {
-    signList = generateSigns();
-  }
-
-  function shuffle(a) {
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
-
-  function generateSigns() {
-    const password = shuffle(Signpass);
-    return password;
-  }
+  const [loading, setLoading] = useState(true);
+  const [sign, setSign] = useState("");
+  const [text, setText] = useState("");
+  const [textSuggestion, setTextSuggestion] = useState("");
 
   useEffect(() => {
     let intervalId;
     async function runHandpose() {
       const net = await handpose.load();
-      //   _signList();
+
       // Check data is available
       if (
         typeof webcamRef.current !== "undefined" &&
@@ -82,104 +58,60 @@ export default function App() {
         intervalId = setInterval(async () => {
           // Make Detections
           const hand = await net.estimateHands(video);
+          setLoading(false);
           // Draw hand lines
           const ctx = canvasRef.current.getContext("2d");
           ctx.clearRect(0, 0, videoWidth, videoHeight);
-          drawHand(hand, ctx);
-          if (hand.length > 0) {
+          if (hand.length > 0 && hand[0].handInViewConfidence > 0.7) {
+            drawHand(hand, ctx);
             //loading the fingerpose model
             const GE = new fp.GestureEstimator([
+              // fp.Gestures.ThumbsUpGesture,
               Handsigns.aSign,
               Handsigns.bSign,
               Handsigns.cSign,
               Handsigns.dSign,
               Handsigns.eSign,
               Handsigns.fSign,
-              Handsigns.gSign,
+              // Handsigns.gSign,
               Handsigns.hSign,
-              Handsigns.iSign,
-              Handsigns.jSign,
-              Handsigns.kSign,
+              // Handsigns.iSign,
+              // Handsigns.jSign,
+              // Handsigns.kSign,
               Handsigns.lSign,
-              Handsigns.mSign,
-              Handsigns.nSign,
+              // Handsigns.mSign,
+              // Handsigns.nSign,
               Handsigns.oSign,
-              Handsigns.pSign,
-              Handsigns.qSign,
-              Handsigns.rSign,
-              Handsigns.sSign,
-              Handsigns.tSign,
-              Handsigns.uSign,
-              Handsigns.vSign,
+              // Handsigns.pSign,
+              // Handsigns.qSign,
+              // Handsigns.rSign,
+              // Handsigns.sSign,
+              // Handsigns.tSign,
+              // Handsigns.uSign,
+              // Handsigns.vSign,
               Handsigns.wSign,
-              Handsigns.xSign,
-              Handsigns.ySign,
-              Handsigns.zSign,
+              // Handsigns.xSign,
+              // Handsigns.ySign,
+              // Handsigns.zSign,
+              Handsigns.thumbs_upSign,
+              Handsigns.spaceSign,
             ]);
 
-            const estimatedGestures = await GE.estimate(hand[0].landmarks, 6.5);
-            // document.querySelector('.pose-data').innerHTML =JSON.stringify(estimatedGestures.poseData, null, 2);
-            console.log(estimatedGestures);
+            const estimatedGestures = await GE.estimate(hand[0].landmarks, 7.0);
+            // console.log(estimatedGestures);
             if (estimatedGestures.gestures.length) {
               const confidence = estimatedGestures.gestures.map((p) => p.score);
               const maxConfidence = confidence.indexOf(
                 Math.max.apply(undefined, confidence)
               );
-              setSign(estimatedGestures.gestures[maxConfidence].name);
+              const guestureName =
+                estimatedGestures.gestures[maxConfidence].name || "";
+              if (guestureName !== sign) setSign(guestureName);
             }
-
-            // if (gamestate === "started") {
-            //   document.querySelector("#app-title").innerText =
-            //     "Make a 👍 gesture with your hand to start";
-            // }
-
-            // if (
-            //   estimatedGestures.gestures !== undefined &&
-            //   estimatedGestures.gestures.length > 0
-            // ) {
-            //   const confidence = estimatedGestures.gestures.map((p) => p.score);
-            //   const maxConfidence = confidence.indexOf(
-            //     Math.max.apply(undefined, confidence)
-            //   );
-            //   //setting up game state, looking for thumb emoji
-            //   if (
-            //     estimatedGestures.gestures[maxConfidence].name ===
-            //       "thumbs_up" &&
-            //     gamestate !== "played"
-            //   ) {
-            //     _signList();
-            //     gamestate = "played";
-            //     document.getElementById("emojimage").classList.add("play");
-            //     // document.querySelector(".tutor-text").innerText =
-            //     //   "make a hand gesture based on letter shown below";
-            //   } else if (gamestate === "played") {
-            //     document.querySelector("#app-title").innerText = "";
-
-            //     //looping the sign list
-            //     if (currentSign === signList.length) {
-            //       _signList();
-            //       currentSign = 0;
-            //       return;
-            //     }
-
-            //     //game play state
-            //     // document
-            //     //   .getElementById("emojimage")
-            //     //   .setAttribute("src", signList[currentSign].src);
-            //     if (
-            //       signList[currentSign].alt ===
-            //       estimatedGestures.gestures[maxConfidence].name
-            //     ) {
-            //       currentSign++;
-            //     }
-            //     setSign(estimatedGestures.gestures[maxConfidence].name);
-            //   }
-            // else if (gamestate === "finished") {
-            //   return;
-            // }
-            // }
+          } else {
+            setSign("");
           }
-        }, 50);
+        }, 20);
       }
     }
     runHandpose().catch(() => {});
@@ -188,14 +120,35 @@ export default function App() {
     };
   }, []);
 
-  function turnOffCamera() {
-    if (camState === "on") {
-      setCamState("off");
-    } else {
-      setCamState("on");
+  useEffect(() => {
+    let timeoutId = 0;
+    if (sign !== "") {
+      timeoutId = setTimeout(() => {
+        if (sign === "thumbs_up") {
+          const lastText = text.substr(0, text.lastIndexOf(" ") + 1);
+          setText(lastText + textSuggestion + " ");
+        } else if (sign === "space") {
+          setText(text + " ");
+        } else setText(text + sign);
+      }, 800);
     }
-  }
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [sign]);
 
+  useEffect(async () => {
+    if (text !== "") {
+      const lastText = text.split(" ")[text.split(" ").length - 1];
+      console.log(lastText);
+      const textSuggestionApi = await axios
+        .get(`https://api.datamuse.com/words?sp=${lastText}??`)
+        .catch((err) => {
+          console.log(err);
+        });
+      setTextSuggestion(textSuggestionApi?.data[0]?.word);
+    } else setTextSuggestion("");
+  }, [text]);
   return (
     <ChakraProvider>
       <Metatags />
@@ -203,34 +156,32 @@ export default function App() {
         <Container centerContent maxW="xl" height="100vh" pt="0" pb="0">
           <VStack spacing={4} align="center">
             <Box h="20px"></Box>
-            <Heading
-              as="h3"
-              size="md"
-              className="tutor-text"
-              color="white"
-              textAlign="center"
-            ></Heading>
-            <Box h="20px"></Box>
           </VStack>
 
           <Heading
             as="h1"
             size="lg"
             id="app-title"
+            color="yellow"
+            textAlign="center"
+            style={{ fontSize: "70px" }}
+          >
+            {loading ? "Loading..." : text}
+          </Heading>
+          <Box h="20px"></Box>
+          <Heading
+            as="h3"
+            size="md"
+            className="tutor-text"
             color="white"
             textAlign="center"
           >
-            Loading
+            {textSuggestion ? `Did you mean: ${textSuggestion}` : ""}
           </Heading>
-
           <Box id="webcam-container">
-            {camState === "on" ? (
-              <Webcam id="webcam" ref={webcamRef} />
-            ) : (
-              <div id="webcam" background="black"></div>
-            )}
+            <Webcam id="webcam" ref={webcamRef} />
 
-            {sign ? (
+            {sign !== "" ? (
               <div
                 style={{
                   position: "absolute",
@@ -241,16 +192,19 @@ export default function App() {
                   textAlign: "-webkit-center",
                 }}
               >
-                <Text color="white" fontSize="sm" mb={1}>
-                  detected gestures
+                {/* <Text color="orange" fontSize="sm" mb={1}>
+                  detected gestures:
+                </Text> */}
+                <Text mb={1} color="orange" style={{ fontSize: "50px" }}>
+                  {sign}
                 </Text>
-                <img
+                {/* <img
                   alt="signImage"
                   src={Signimage[sign]}
                   style={{
                     height: 30,
                   }}
-                />
+                /> */}
               </div>
             ) : (
               " "
@@ -275,17 +229,12 @@ export default function App() {
 
         <Stack id="start-button" spacing={4} direction="row" align="center">
           <Button
-            leftIcon={
-              camState === "on" ? (
-                <RiCameraFill size={20} />
-              ) : (
-                <RiCameraOffFill size={20} />
-              )
-            }
-            onClick={turnOffCamera}
+            onClick={() => {
+              setText("");
+            }}
             colorScheme="orange"
           >
-            Camera
+            Clear Text
           </Button>
           <About />
         </Stack>

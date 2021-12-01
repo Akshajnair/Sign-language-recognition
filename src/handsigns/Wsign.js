@@ -47,5 +47,5 @@ wSign.addDirection(Finger.Ring, FingerDirection.DiagonalUpLeft, 0.70);
 
 //Pinky
 wSign.addCurl(Finger.Pinky, FingerCurl.FullCurl, 1);
-wSign.addDirection(Finger.Pinky, FingerDirection.DiagonalUpLeft, 0.70);
+// wSign.addDirection(Finger.Pinky, FingerDirection.DiagonalUpLeft, 0.70);
 
