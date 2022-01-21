@@ -124,12 +124,13 @@ export default function App() {
     let timeoutId = 0;
     if (sign !== "") {
       timeoutId = setTimeout(() => {
-        if (sign === "thumbs_up") {
-          const lastText = text.substr(0, text.lastIndexOf(" ") + 1);
-          setText(lastText + textSuggestion + " ");
-        } else if (sign === "space") {
-          setText(text + " ");
-        } else setText(text + sign);
+        // if (sign === "thumbs_up") {
+        //   const lastText = text.substr(0, text.lastIndexOf(" ") + 1);
+        //   setText(lastText + textSuggestion + " ");
+        // } else if (sign === "space") {
+        //   setText(text + " ");
+        // } else
+        setText(text + sign);
       }, 800);
     }
     return () => {
